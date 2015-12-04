@@ -1,0 +1,25 @@
+# get the filename from the request and store it in $request_basename
+
+        map $request_uri $request_basename {
+                ~/(?<captured_request_basename>[^/?]*)(?:\?|$) $captured_request_basename;
+        }
+
+        server{
+                listen 80;
+                server_name {{ static_files_hostname }};
+                index index.html index.htm;
+                root /var/www/node/server/storage;
+                location / {
+                        root /var/www/node/server/storage;
+                }
+                location /img/resize/ {
+                        try_files $uri $uri/ @generate_thumb;
+                }
+
+                location @generate_thumb {
+                        rewrite /img/resize/(\d+x\d+)/([^\/]+$) /img/$2?dim=$1 break;
+                        proxy_pass http://127.0.0.1:{{ api_local_port }};
+                        proxy_redirect     off;
+                        proxy_set_header   Host $host;
+                }
+        }

@@ -1,0 +1,35 @@
+---
+- hosts: webservers
+
+  vars:
+      server_name: "api.ideahub.com"
+      static_files_hostname: "static.api.ideahub.com"
+      api_local_port: "3000"
+
+  remote_user: ubuntu
+  tasks:
+      - name: Test connection
+        ping:
+
+      - name: Write API Nginx conf
+        action: template src=templates/vhost.j2 dest=/etc/nginx/sites-available/api.conf
+        sudo: yes
+
+      - name: Symlink API Nginx conf
+        file: src=/etc/nginx/sites-available/api.conf dest=/etc/nginx/sites-enabled/api.conf state=link
+        sudo: yes
+
+      - name: Write static Nginx conf
+        action: template src=templates/static.j2 dest=/etc/nginx/sites-available/static.conf
+        sudo: yes
+
+      - name: Symlink static Nginx conf
+        file: src=/etc/nginx/sites-available/static.conf dest=/etc/nginx/sites-enabled/static.conf state=link
+        sudo: yes
+
+      - name: Append hostname to host file
+        shell: printf "127.0.0.1 {{ server_name }}\n127.0.0.1 {{ static_files_hostname }}\n" >> /etc/hosts
+        sudo: yes
+
+      - name: Restart nginx
+        service: name=nginx state=restarted

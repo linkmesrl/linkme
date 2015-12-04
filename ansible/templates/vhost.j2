@@ -1,0 +1,20 @@
+server{
+        listen 80;
+        server_name {{ server_name }};
+        index  index.html index.htm;
+        location / {
+                root /var/www/static;
+        }
+        location ~/api/|/explorer {
+                proxy_buffering off;
+                proxy_set_header Host $host;
+                proxy_hide_header X-Powered-By;
+                proxy_pass http://127.0.0.1:{{ api_local_port }};
+                proxy_redirect off;
+        }
+        location ~/member/|/category/|/license/|/tenant/ {
+                root /var/www/node/current/server/storage;
+        }
+}
+
+
