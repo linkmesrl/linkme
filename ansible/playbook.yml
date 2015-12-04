@@ -1,0 +1,81 @@
+---
+- hosts: webservers
+  remote_user: ubuntu
+  tasks:
+      - name: Test connection
+        ping:
+
+      # Setting up the environment
+     # - name: Create deploy user
+     #   shell: useradd -g www-data deploy
+     #   sudo: yes
+
+      - user: name=deploy comment="Deploy user" uid=1040 group=www-data
+        sudo: yes
+
+      - name: Check if deploy folder exists
+        stat: path=/var/www
+        register: deploy_folder
+        sudo: yes
+
+      - name: Setup the deploy folder
+        shell: mkdir -p /var/www/ && mkdir -p /var/www/node && mkdir -p /var/www/static && chown -R deploy:www-data /var/www/*
+        when: deploy_folder.stat.exists == false
+        sudo: yes
+      - name: Check if MongoDB data folder exists
+        stat: path=/data
+        register: mongodb_folder
+      - name: Set mongodb folder
+        shell: mkdir /data && mkdir /data/db
+        when: mongodb_folder.stat.exists == false
+        sudo: yes
+
+
+      # Install other packages
+      - name: Install Packages
+        apt: pkg={{ item }} state=latest
+        with_items:
+            - nginx
+            - git
+            - nodejs
+            - npm
+
+        sudo: yes
+
+      - name: Check if node symlink exists
+        stat: path=/usr/bin/node
+        register: node_symlink
+        sudo: yes        
+      - name: Creating Symlink from nodejs to node
+        shell: ln -s "$(which nodejs)" /usr/bin/node
+        when: node_symlink.stat.exists == false
+        sudo: yes
+
+      - name: Install n
+        shell: npm install -g n
+        sudo: yes
+
+      - name: Install node 
+        shell: n stable
+        sudo: yes
+
+      - name: Install PM2
+        shell: npm install -g pm2
+        sudo: yes
+
+
+      # Install MongoDB
+      - name: MongoDB | Import the MongoDB public key
+        shell: apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10
+        sudo: yes
+      - name: MongoDB | Generate a file with the MongoDB repository url
+        shell: echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/mongodb.list
+      - name: MongoDB | upgrade-dist Apt-get
+        apt: upgrade=dist
+        sudo: yes
+      - name: MongoDB | Update Apt-get
+        apt: update_cache=yes
+        sudo: yes
+      - name: MongoDB | Install latest MongoDB release
+        shell: apt-get install -y mongodb-org
+        sudo: yes

@@ -1,4 +1,13 @@
 
+## 2015-11-25, version 0.2.1
+* Switched to english
+* Added ansible roles for provisioning a little standard mean project 
+staging machine
+* Build dir in typescript projects
+
+
+
+
 ## 2015-11-25, version 0.1.0
 
 Breve output di quello che ci siamo detti oggi.
