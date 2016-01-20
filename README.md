@@ -1,4 +1,4 @@
-# linkme
+# Linkme
 Our practices, now in a convenient versioned form
 
 ## Index
